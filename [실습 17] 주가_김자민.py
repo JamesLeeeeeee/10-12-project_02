@@ -39,7 +39,7 @@ def kospi():
             driver.find_element_by_xpath('//*[@id="common_component_tab"]/div/ul/li[4]/a').click() # 시세 클릭
             # 갯수만큼 더보기
             cnt = 1
-            while True:
+            while cnt <= 25:
                 try:
                     body = driver.find_element_by_class_name("international")
                     body.send_keys(Keys.PAGE_DOWN)
@@ -49,8 +49,6 @@ def kospi():
                     continue
                 else:            
                     cnt += 1
-                    if cnt == 25:
-                        break
 
             full_html = driver.page_source
             soup = BeautifulSoup(full_html, "html.parser")
@@ -63,11 +61,11 @@ def kospi():
             driver.back()
             
             # 파일이 있는 있는 경우 시트 추가
-            if not os.path.exists("KOSPI"):
-                with pd.ExcelWriter("KOSPI", mode = "w", engine = "openpyxl") as writer:
+            if not os.path.exists("KOSPI.xlsx"):
+                with pd.ExcelWriter("KOSPI.xlsx", mode = "w", engine = "openpyxl") as writer:
                     summary.to_excel(writer, sheet_name="{}" .format(no), index = False)
             else:
-                with pd.ExcelWriter("KOSPI", mode = "a", engine = "openpyxl") as writer:
+                with pd.ExcelWriter("KOSPI.xlsx", mode = "a", engine = "openpyxl") as writer:
                     summary.to_excel(writer, sheet_name="{}" .format(no), index = False)
 
 
@@ -105,7 +103,7 @@ def kosdaq():
             driver.find_element_by_xpath('//*[@id="common_component_tab"]/div/ul/li[4]/a').click() # 시세 클릭
             # 갯수만큼 더보기
             cnt = 1
-            while True:
+            while cnt <= 25:
                 try:
                     body = driver.find_element_by_class_name("international")
                     body.send_keys(Keys.PAGE_DOWN)
@@ -115,8 +113,6 @@ def kosdaq():
                     continue
                 else:            
                     cnt += 1
-                    if cnt == 25:
-                        break
 
             full_html = driver.page_source
             soup = BeautifulSoup(full_html, "html.parser")
@@ -129,11 +125,11 @@ def kosdaq():
             driver.back()
             
             # 파일이 있는 있는 경우 시트 추가
-            if not os.path.exists("KOSPI"):
-                with pd.ExcelWriter("KOSPI", mode = "w", engine = "openpyxl") as writer:
+            if not os.path.exists("KOSDAQ.xlsx"):
+                with pd.ExcelWriter("KOSDAQ.xlsx", mode = "w", engine = "openpyxl") as writer:
                     summary.to_excel(writer, sheet_name="{}" .format(no), index = False)
             else:
-                with pd.ExcelWriter("KOSPI", mode = "a", engine = "openpyxl") as writer:
+                with pd.ExcelWriter("KOSDAQ.xlsx", mode = "a", engine = "openpyxl") as writer:
                     summary.to_excel(writer, sheet_name="{}" .format(no), index = False)
 
             no += 1    
