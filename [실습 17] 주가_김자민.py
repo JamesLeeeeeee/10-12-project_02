@@ -15,6 +15,10 @@ def kospi():
     driver = webdriver.Chrome(path)
 
     driver.get("https://m.stock.naver.com/index.html#/domestic/capitalization/KOSPI")
+    # 전체 화면
+    driver.maximize_window()
+    time.sleep(1)
+    print("완료")
         
     full_html = driver.page_source
     soup = BeautifulSoup(full_html, "html.parser")
@@ -29,7 +33,8 @@ def kospi():
             # 더보기
             try:
                 body = driver.find_element_by_class_name("international")
-                body.send_keys(Keys.PAGE_DOWN)
+                body.send_keys(Keys.END)
+                time.sleep(1)
                 driver.find_element_by_class_name("VMore_link__1zqGi").click()
                 time.sleep(1)
             except Exception:
@@ -39,16 +44,18 @@ def kospi():
             driver.find_element_by_xpath('//*[@id="common_component_tab"]/div/ul/li[4]/a').click() # 시세 클릭
             # 갯수만큼 더보기
             cnt = 1
-            while cnt <= 25:
+            while True:
                 try:
                     body = driver.find_element_by_class_name("international")
-                    body.send_keys(Keys.PAGE_DOWN)
-                    driver.find_element_by_class_name("VMore_link__1zqGi").click()
+                    body.send_keys(Keys.END)
                     time.sleep(1)
+                    driver.find_element_by_class_name("VMore_link__1zqGi").click()
                 except Exception:
                     continue
                 else:            
                     cnt += 1
+                    if cnt == 25:
+                        break
 
             full_html = driver.page_source
             soup = BeautifulSoup(full_html, "html.parser")
@@ -79,7 +86,11 @@ def kosdaq():
     driver = webdriver.Chrome(path)
 
     driver.get("https://m.stock.naver.com/index.html#/domestic/capitalization/KOSDAQ")
-        
+    # 전체 화면
+    driver.maximize_window()
+    time.sleep(1)
+    print("완료")
+
     full_html = driver.page_source
     soup = BeautifulSoup(full_html, "html.parser")
 
@@ -93,9 +104,9 @@ def kosdaq():
             # 더보기
             try:
                 body = driver.find_element_by_class_name("international")
-                body.send_keys(Keys.PAGE_DOWN)
-                driver.find_element_by_class_name("VMore_link__1zqGi").click()
+                body.send_keys(Keys.END)
                 time.sleep(1)
+                driver.find_element_by_class_name("VMore_link__1zqGi").click()
             except Exception:
                 continue
 
@@ -103,16 +114,19 @@ def kosdaq():
             driver.find_element_by_xpath('//*[@id="common_component_tab"]/div/ul/li[4]/a').click() # 시세 클릭
             # 갯수만큼 더보기
             cnt = 1
-            while cnt <= 25:
+            while True:
                 try:
                     body = driver.find_element_by_class_name("international")
-                    body.send_keys(Keys.PAGE_DOWN)
+                    body.send_keys(Keys.END)
+                    time.sleep(1)
                     driver.find_element_by_class_name("VMore_link__1zqGi").click()
                     time.sleep(1)
                 except Exception:
                     continue
                 else:            
                     cnt += 1
+                    if cnt == 25:
+                        break
 
             full_html = driver.page_source
             soup = BeautifulSoup(full_html, "html.parser")
@@ -125,14 +139,11 @@ def kosdaq():
             driver.back()
             
             # 파일이 있는 있는 경우 시트 추가
-            if not os.path.exists("KOSDAQ.xlsx"):
-                with pd.ExcelWriter("KOSDAQ.xlsx", mode = "w", engine = "openpyxl") as writer:
+            if not os.path.exists("KOSPI.xlsx"):
+                with pd.ExcelWriter("KOSPI.xlsx", mode = "w", engine = "openpyxl") as writer:
                     summary.to_excel(writer, sheet_name="{}" .format(no), index = False)
             else:
-                with pd.ExcelWriter("KOSDAQ.xlsx", mode = "a", engine = "openpyxl") as writer:
+                with pd.ExcelWriter("KOSPI.xlsx", mode = "a", engine = "openpyxl") as writer:
                     summary.to_excel(writer, sheet_name="{}" .format(no), index = False)
 
             no += 1    
-
-kospi()
-kosdaq()
