@@ -25,7 +25,7 @@ def kospi():
         try:
             driver.find_element_by_xpath('//*[@id="content"]/div[4]/div[2]/div[2]/div[1]/table/tbody/tr[%s]/td[1]/span[1]' %no).click() # 종목 클릭
             time.sleep(1)
-        except AttributeError:
+        except Exception:
             # 더보기
             try:
                 body = driver.find_element_by_class_name("international")
@@ -89,7 +89,7 @@ def kosdaq():
         try:
             driver.find_element_by_xpath('//*[@id="content"]/div[4]/div[2]/div[2]/div[1]/table/tbody/tr[%s]/td[1]/span[1]' %no).click() # 종목 클릭
             time.sleep(1)
-        except AttributeError:
+        except Exception:
             # 더보기
             try:
                 body = driver.find_element_by_class_name("international")
