@@ -18,7 +18,6 @@ def kospi():
     # 전체 화면
     driver.maximize_window()
     time.sleep(1)
-    print("완료")
         
     full_html = driver.page_source
     soup = BeautifulSoup(full_html, "html.parser")
@@ -89,7 +88,6 @@ def kosdaq():
     # 전체 화면
     driver.maximize_window()
     time.sleep(1)
-    print("완료")
 
     full_html = driver.page_source
     soup = BeautifulSoup(full_html, "html.parser")
