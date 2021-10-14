@@ -120,7 +120,7 @@ def IG_text(driver, insta_dict):
                     else:
                         text.append(t)
         #글에 해시태그가 없을 시 해시태그 없음 처리
-        if '#' not in info_text:   
+        if '#' not in info_text[1].text:   
             tag.append('해시태그없음')
     insta_dict['text'].append(text)
     insta_dict['hashtag'].append(tag)
