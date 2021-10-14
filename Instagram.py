@@ -20,7 +20,7 @@ insta_dict = {'id':[],
               'img': []}
 
 def IG_run(driver):
-#     ##데이터를 저장할 Dictionary
+    ##데이터를 저장할 Dictionary
 #     insta_dict = {'id':[],
 #                   'location': [],
 #                   'date': [],
