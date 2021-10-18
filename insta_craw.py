@@ -9,6 +9,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException #EC에서 설정한 시간이 지나면 뜨는 에러 exception처리
 import json
 import random
+import os
 
 ##데이터를 저장할 Dictionary
 insta_dict = {'id':[],
@@ -18,24 +19,12 @@ insta_dict = {'id':[],
               'text': [],
               'hashtag': [],
               'img': []}
-
+runs = True
 def IG_run(driver):
-    ##데이터를 저장할 Dictionary
-#     insta_dict = {'id':[],
-#                   'location': [],
-#                   'date': [],
-#                   'like': [],
-#                   'text': [],
-#                   'hashtag': [],
-#                   'img': []}
+    global runs
     html = driver.page_source
     soup = BeautifulSoup(html, "html.parser")
-#     search = driver.find_element_by_class_name('XTCLo.x3qfX')
     text = input("검색어 입력")
-#     search.send_keys(text)
-#     time.sleep(2)
-#     search.send_keys(Keys.RETURN)
-#     search.send_keys(Keys.RETURN)
     driver.get("https://www.instagram.com/explore/tags/"+text)
     time.sleep(2)
     try:
@@ -48,32 +37,36 @@ def IG_run(driver):
         html = driver.page_source
         soup = BeautifulSoup(html, "html.parser")
         no = 1
-        runs = True
-        while runs:
+        while runs == True:
             print('게시글:',no)
             IG_ID(driver, insta_dict)
-            IG_location(driver, insta_dict)
-            IG_text(driver, insta_dict)
-            IG_like(driver, insta_dict)
-            IG_date(driver, insta_dict)
-            IG_img(driver, insta_dict, no)
-            no += 1
-            #다음 게시글 클릭
-            time.sleep(1+ random.randrange(1,7))
-            driver.find_element_by_link_text('다음').click()
-
+            if runs == True:
+                IG_location(driver, insta_dict)
+                IG_text(driver, insta_dict)
+                IG_like(driver, insta_dict)
+                IG_date(driver, insta_dict)
+                IG_img(driver, insta_dict, no)
+                no += 1
+                #다음 게시글 클릭
+                time.sleep(1+ random.randrange(1,7))
+                driver.find_element_by_link_text('다음').click()
+                #return runs
+    finally:
+        #insta_dict로 저장한 데이터 JSON파일로 저장
+        with open('instagram_data.json', 'w') as f:
+            json.dump(insta_dict, f, indent=4)  #indent를 사용하면 JSON보기 좋게 표현됨
+            
 def IG_ID(driver, insta_dict):
+    global runs
     ## 게시자 ID
     try:
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'cv3IO')))
+        WebDriverWait(driver, 1000).until(EC.presence_of_element_located((By.CLASS_NAME, 'cv3IO')))
     except TimeoutException:
         print("크롤링할 데이터가 없습니다.")
         runs = False
-        pass
+        return runs
     else:
-        html = driver.page_source
-        soup = BeautifulSoup(html, "html.parser")
-        info_id = soup.find('a','sqdOP yWX7d _8A5w5 ZIAjV').get_text()
+        info_id = driver.find_element_by_css_selector('h2._6lAjh').text
         print(info_id)
         insta_dict['id'].append(info_id)
 
@@ -84,7 +77,7 @@ def IG_location(driver, insta_dict):
     try:
         info_location = soup.find('a','O4GlU').get_text()
     except AttributeError:
-        info_location = '장소정보없음'
+        info_location = 'None'
         insta_dict['location'].append(info_location)
         print('장소정보가 없습니다.')
     else:
@@ -94,15 +87,16 @@ def IG_location(driver, insta_dict):
 def IG_text(driver, insta_dict):
     ## 게시글 내용/해시태그 추출
     text = []
+    cleantext=[]
     tag = []
     try:
         texts = driver.find_element_by_css_selector('div.C4VMK')
         info_text = texts.find_elements_by_tag_name('span')
     except AttributeError:
         #내용 없을시 각 text, tag리스트에 내용없음 처리
-        text.append('내용없음')
+        text.append('None')
         print('내용정보가 없습니다.')
-        tag.append('해시태그없음')
+        tag.append('None')
         print('해시태그정보가 없습니다.')
     else:
         for i in range(len(info_text)):
@@ -120,11 +114,14 @@ def IG_text(driver, insta_dict):
                     else:
                         text.append(t)
         #글에 해시태그가 없을 시 해시태그 없음 처리
-        if '#' not in info_text:   
-            tag.append('해시태그없음')
-    insta_dict['text'].append(text)
+        if '#' not in info_text[1].text:   
+            tag.append('None')
+    clean_text = ' '.join(text)
+    cleantext.append(clean_text)
+    insta_dict['text'].append(cleantext)
+#     insta_dict['text'].append(text)
     insta_dict['hashtag'].append(tag)
-    print(text)
+    print(cleantext)
     print(tag)
 
 def IG_like(driver, insta_dict):
@@ -139,7 +136,7 @@ def IG_like(driver, insta_dict):
             info_like = soup.find('span','vcOH2').get_text()
         except AttributeError:
             #좋아요, 조회정보 없을 시 모두 없음처리
-            info_like = '정보없음'
+            info_like = 'None'
             insta_dict['like'].append(info_like)
             print('좋아요, 조회수정보가 없습니다.')
         else:
@@ -185,12 +182,13 @@ def IG_like(driver, insta_dict):
 def IG_date(driver, insta_dict):
     ##게시시간 추출
     try:
-        time = driver.find_element_by_tag_name('time').get_attribute('title')
+        uploadTime=driver.find_element_by_css_selector('time._1o9PC')
+        time_info=uploadTime.get_attribute('datetime')[:19]
     except:
-        insta_dict['date'].append('시간정보없음')
+        insta_dict['date'].append('None')
     else:
-        print(time)
-        insta_dict['date'].append(time)
+        print(time_info)
+        insta_dict['date'].append(time_info)
 
 def IG_img(driver, insta_dict, no):
     ##이미지 저장
@@ -219,5 +217,5 @@ def IG_img(driver, insta_dict, no):
             print('사진정보가 없습니다.')
     else:
         insta_dict['img'].append(info_img)
-        urllib.request.urlretrieve(info_img, str(f'{no}-{insta_dict["id"][no-1]}.jpg'))
+#         urllib.request.urlretrieve(info_img, str(f'{no}-{insta_dict["id"][no-1]}.jpg'))
         print(info_img)
