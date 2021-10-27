@@ -10,6 +10,7 @@ from selenium.common.exceptions import TimeoutException #EC에서 설정한 시�
 import json
 import random
 import os
+import re
 
 ##데이터를 저장할 Dictionary
 insta_dict = {'id':[],
@@ -24,7 +25,14 @@ def IG_run(driver):
     global runs
     html = driver.page_source
     soup = BeautifulSoup(html, "html.parser")
-    text = input("검색어 입력")
+    while True:
+        text = input("검색어 입력 > ")
+        text = re.sub(r"\s+", "", text, flags=re.UNICODE) #공백제거
+        if text == '':
+            print("검색어를 다시 입력해주세요.")
+            continue
+        else:
+            break
     driver.get("https://www.instagram.com/explore/tags/"+text)
     time.sleep(2)
     try:
@@ -49,8 +57,13 @@ def IG_run(driver):
                 no += 1
                 #다음 게시글 클릭
                 time.sleep(1+ random.randrange(1,7))
-                driver.find_element_by_link_text('다음').click()
-                #return runs
+            try:
+        #         driver.find_element_by_xpath('/html/body/div[6]/div[1]/div/div/div[2]').click()
+                driver.find_element_by_css_selector('body > div._2dDPU.QPGbb.CkGkG > div.EfHg9 > div > div > div.l8mY4 > button > div > span > svg').click()
+                time.sleep(2)
+            except NoSuchElementException:
+                runs = False
+                
     finally:
         #insta_dict로 저장한 데이터 JSON파일로 저장
         with open('instagram_data.json', 'w') as f:
@@ -60,15 +73,22 @@ def IG_ID(driver, insta_dict):
     global runs
     ## 게시자 ID
     try:
-        WebDriverWait(driver, 1000).until(EC.presence_of_element_located((By.CLASS_NAME, 'cv3IO')))
+        WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.CLASS_NAME, '_32yJO')))
     except TimeoutException:
         print("크롤링할 데이터가 없습니다.")
         runs = False
         return runs
     else:
-        info_id = driver.find_element_by_css_selector('h2._6lAjh').text
-        print(info_id)
-        insta_dict['id'].append(info_id)
+        try:
+            WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.CLASS_NAME, 'Ppjfr')))
+        except TimeoutException:
+            print("크롤링할 데이터가 없습니다.")
+            runs = False
+        else:
+            header_id = driver.find_element_by_xpath('/html/body/div[6]/div[2]/div/article/div/div[2]/div/div/div[1]/div/header')
+            info_id = header_id.find_element_by_xpath('/html/body/div[6]/div[2]/div/article/div/div[2]/div/div/div[1]/div/header/div[2]/div[1]/div[1]/span/a').text
+            print(info_id)
+            insta_dict['id'].append(info_id)
 
 def IG_location(driver, insta_dict):
     ## 게시글 위치
@@ -217,5 +237,5 @@ def IG_img(driver, insta_dict, no):
             print('사진정보가 없습니다.')
     else:
         insta_dict['img'].append(info_img)
-#         urllib.request.urlretrieve(info_img, str(f'{no}-{insta_dict["id"][no-1]}.jpg'))
+#         urllib.request.urlretrieve(info_img, str(f'{no}-{insta_dict["id"][no-1]}.jpg')) #이미지 저장
         print(info_img)
